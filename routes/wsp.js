@@ -2,10 +2,11 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const jwt = require("jwt-simple");
-const Workspace = require("./models/Workspace.js");
+const Workspace = require("../models/Workspace.js");
 const auth = require("./auth.js");
 
-router.get("/workspaces", auth.checkAuthenticated, async (req, res) => {
+// Route handler for getting workspaces
+async function getWorkspaces(req, res) {
   try {
     // Decode the token to extract the user ID
     const token = req.header("authorization").split(" ")[1];
@@ -32,28 +33,64 @@ router.get("/workspaces", auth.checkAuthenticated, async (req, res) => {
       res.status(500).send("Error loading workspaces");
     }
   }
-});
+}
 
-router.post("/workspace", auth.checkAuthenticated, (req, res) => {
+// Route handler for creating a new workspace
+async function createWorkspace(req, res) {
   var wsData = req.body;
   wsData.author = req.userId;
 
   var workspace = new Workspace(wsData);
 
-  workspace
-    .save()
-    .then((result) => {
-      console.log("Workspace saved successfully:", result);
-      // Send JSON response with the created workspace data
-      res.status(201).json(result);
-    })
-    .catch((error) => {
-      console.error("Error saving workspace:", error);
+  try {
+    const result = await workspace.save();
+    // Send JSON response with the created workspace data
+    res.status(201).json(result);
+  } catch (error) {
+    console.error("Error saving workspace:", error);
+    if (error.name === "ValidationError") {
+      // Handle validation errors
+      res.status(400).json({ error: error.message });
+    } else {
+      // Other unexpected errors
       res.status(500).json({ error: "Error saving workspace" });
-    });
-});
+    }
+  }
+}
 
-router.delete("/workspace/:id", auth.checkAuthenticated, async (req, res) => {
+// Route handler for renaming a workspace title
+async function renameWorkspace(req, res) {
+  try {
+    const workspaceId = req.params.id;
+    const newTitle = req.body.newTitle;
+
+    // Check if the workspace ID is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
+      return res.status(400).json({ error: "Invalid workspace ID" });
+    }
+
+    // Find the workspace by its ID and update the title
+    const updatedWorkspace = await Workspace.findByIdAndUpdate(
+      workspaceId,
+      { title: newTitle },
+      { new: true } // Return the updated document
+    );
+
+    // If the workspace doesn't exist, return 404
+    if (!updatedWorkspace) {
+      return res.status(404).json({ error: "Workspace not found" });
+    }
+
+    // Send the updated workspace data in the response
+    res.status(200).json(updatedWorkspace);
+  } catch (error) {
+    console.error("Error renaming workspace:", error);
+    res.status(500).json({ error: "Error renaming workspace" });
+  }
+}
+
+// Route handler for deleting a workspace
+async function deleteWorkspace(req, res) {
   try {
     const workspaceId = req.params.id;
 
@@ -76,6 +113,12 @@ router.delete("/workspace/:id", auth.checkAuthenticated, async (req, res) => {
     console.error("Error deleting workspace:", error);
     res.status(500).json({ error: "Error deleting workspace" });
   }
-});
+}
+
+// Define routes
+router.get("/workspaces", auth.checkAuthenticated, getWorkspaces);
+router.post("/workspace", auth.checkAuthenticated, createWorkspace);
+router.put("/workspace/:id/rename", auth.checkAuthenticated, renameWorkspace);
+router.delete("/workspace/:id", auth.checkAuthenticated, deleteWorkspace);
 
 module.exports = router;
