@@ -2,20 +2,23 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
-const auth = require("./routes/auth.js");
-
+const auth = require("./routes/auth.routes.js");
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
 
 // Define routes for authentication
-const authRoutes = require("./routes/auth.js").router;
+const authRoutes = require("./routes/auth.routes.js").router;
 app.use("/auth", authRoutes);
 
 // Define routes for workspace
-const wspRoutes = require("./routes/wsp.js");
-app.use("/api", auth.checkAuthenticated, wspRoutes); // Protected workspace routes
+const wspRoutes = require("./routes/workspace.routes.js");
+app.use("/workspaces", auth.checkAuthenticated, wspRoutes); // Protected workspace routes
+
+// Define routes for boards
+const brdRoutes = require("./routes/board.routes.js");
+app.use("/boards", auth.checkAuthenticated, brdRoutes); // Protected board routes
 
 // Connect to MongoDB
 mongoose

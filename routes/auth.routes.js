@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jwt-simple");
 const User = require("../models/User.js");
 const express = require("express");
+const UserController = require("../controllers/user.controller.js");
 
 // Middleware function to check if the request is authenticated
 function checkAuthenticated(req, res, next) {
@@ -39,7 +40,7 @@ async function registerUser(req, res) {
     const payload = { sub: newUser._id };
     const token = jwt.encode(payload, "123");
 
-    res.status(200).send({ token: token });
+    res.status(200).json({ token: token });
   } catch (error) {
     console.error("Error saving user:", error);
     res.status(500).send("Error saving user");
