@@ -1,5 +1,6 @@
 var User = require("../models/User.js");
 var BaseController = require("./base.controller.js");
+const bcrypt = require("bcrypt");
 const jwt = require("jwt-simple");
 
 class UserController extends BaseController {

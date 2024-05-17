@@ -1,6 +1,4 @@
-const bcrypt = require("bcrypt");
 const jwt = require("jwt-simple");
-const User = require("../models/User.js");
 const express = require("express");
 const UserController = require("../controllers/user.controller.js");
 
