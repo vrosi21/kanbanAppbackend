@@ -1,10 +1,34 @@
 var mongoose = require("mongoose");
-var bcrypt = require("bcrypt"); // Add this line to import the bcrypt module
+var bcrypt = require("bcrypt");
 
 var userSchema = new mongoose.Schema({
-  username: String,
-  email: String,
-  password: String,
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    match: [
+      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+      "Please enter a valid email address",
+    ],
+  },
+  password: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function (v) {
+        return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,32}$/.test(
+          v
+        );
+      },
+      message: (props) =>
+        `${props.value} is not a valid password. Password must contain at least one number, one letter, one special character, and be 8-32 characters long.`,
+    },
+  },
 });
 
 userSchema.pre("save", function (next) {

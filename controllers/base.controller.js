@@ -27,12 +27,9 @@ class BaseController {
 
   async create(req, res) {
     const item = new this.model(req.body);
-    /* //TODO: Add error handling
     const errors = item.validateSync();
-    if (errors) {
-      const validationError = generateValidationErrors(errors);
-      return res.status(400).send(validationError);
-    }*/
+    if (errors) return res.status(400).json(errors);
+
     try {
       await item.save();
       res.status(200).send(item);
@@ -50,10 +47,7 @@ class BaseController {
 
     const item = new this.model(itemData);
     const errors = item.validateSync();
-    if (errors) {
-      const validationError = generateValidationErrors(errors);
-      return res.status(400).send(validationError);
-    }
+    if (errors) return res.status(400).json(errors);
 
     try {
       const item = await this.model.findByIdAndUpdate(id, itemData, {
